@@ -4,6 +4,7 @@ from tkinter import *
 from tkcalendar import *
 import customtkinter
 from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.common.keys import Keys
@@ -130,10 +131,16 @@ def get_sms():
     sms_list=[]
     driver.get(sms_url)
     time.sleep(2)
-    all_sms_templates = driver.find_elements(By.CSS_SELECTOR,'td')
-    sms_names = all_sms_templates[::4]
-    for sms_name in sms_names:
-        sms_list.append(sms_name.text)
+    #driver.find_element_by_id('ctl00_ctl00_ctl00_Content_ContentPlaceHolder1_Content_cmbTemplate').click()
+    all_sms_templates = driver.find_elements(By.CSS_SELECTOR,'option')
+    for sms_template in all_sms_templates:
+        sms_template_name = sms_template.text
+        if sms_template_name == 'Blank':
+            pass
+        elif sms_template_name =='Variables':
+            break # you have reached the end
+        else:
+            sms_list.append(sms_template.text)
     return sms_list
 
 
@@ -286,6 +293,12 @@ def process_choice(choice):
     start_date = cal.get_date()
     chosen_tag = tag_object.entry.get()
     comms_method = choice
+
+    # Check they have actually chosen
+    if comms_method == 'Make your selection':
+        pymsgbox.alert("You didn't select a way to communicate, try again")
+        return
+
     confirmation_text = "You have chosen to send a  "+comms_method+" to patients tagged with "+chosen_tag+" who have not been seen since "+start_date
     response = pymsgbox.confirm(text = confirmation_text, buttons=['OK','Try again'] )
     if response == 'Try again':
@@ -711,16 +724,19 @@ def get_first_choice():
     choose_list = customtkinter.CTkOptionMenu(root,
                                               values=selections,
                                               corner_radius=8,
-                                              font=("Arial", 14),
+                                              #=("Arial", 14),
                                               dropdown_font=("Arial", 14),
                                               command=process_choice)
     choose_list.pack(padx=20)
+
+    version_label = Label(root, text=version_no)
+    version_label.pack(pady=60, padx=10, anchor="e")
 
     root.mainloop()
 
 
 # Code starts here
-version_no = "V1 31 December 2022"
+version_no = "V1.1 PC 01/02/23"
 wd = 'C:\\Billing\\Recall'
 downloadDirectory = wd
 config_file = 'recall.ini'
@@ -768,13 +784,20 @@ t_day = int(datetime.strftime(today_obj, '%d'))
 t_month = int(datetime.strftime(today_obj, '%m'))
 t_year = int(datetime.strftime(today_obj, '%Y'))
 
+firefox_options = Options()
+firefox_options.binary_location = r"C:\Program Files\Mozilla Firefox\firefox.exe"
+firefox_options.add_argument("--disable-infobars")
+firefox_options.add_argument("--disable-extensions")
+firefox_options.add_argument("--disable-popup-blocking")
+
 profile = webdriver.FirefoxProfile()
 profile.set_preference('browser.download.folderList', 2)
 profile.set_preference('browser.download.manager.showWhenStarting', False)
 profile.set_preference('browser.download.dir', downloadDirectory)
 profile.set_preference('browser.helperApps.neverAsk.saveToDisk', 'text/csv')
 profile.set_preference('browser.download.alwaysOpenPanel', False)
-driver = webdriver.Firefox(executable_path = driverPath,firefox_profile=profile)
+
+driver = webdriver.Firefox(executable_path = driverPath,firefox_profile=profile, options=firefox_options)
 
 # UI
 # customtkinter.set_appearance_mode("dark")
@@ -793,17 +816,12 @@ search_box = driver.find_element_by_id('ctl00_ctl00_Content_siteHead_dfSearchWid
 search_box.send_keys(patient_wuid)
 time.sleep(1)
 search_box.send_keys(Keys.RETURN)
-time.sleep(1)
+time.sleep(3)
 get_first_choice()
 
-print('stop')
-
-
-
-
-# this could be written tag_object.update_display_List() and then you wouldn't need to return Self
 
 submit_button = Button(root, text="Push Me", command= main_process)
 submit_button.pack(pady=20, padx=10)
+
 
 
