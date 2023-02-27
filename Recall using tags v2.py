@@ -1,3 +1,6 @@
+# Program to send out stuff to patients tagged who havem't been seen since a certain date
+# v1.2 27/02/23 change in WriteUp Activity page
+
 import sys
 import webbrowser
 from tkinter import *
@@ -162,12 +165,12 @@ def download_tagged_patients():
 def download_activity():
     driver.get(activity_url)
     time.sleep(1)
-    from_field = driver.find_element_by_id('ctl00_ctl00_Content_ContentPlaceHolder1_dfDateFrom')
+    from_field = driver.find_element_by_xpath('/html/body/form/div[5]/div/div/div[1]/input[1]')
     from_field.clear()
     from_field.send_keys(start_date)
-    driver.find_element_by_id('ctl00_ctl00_Content_ContentPlaceHolder1_btnFilter').click()
+    driver.find_element_by_xpath('/html/body/form/div[5]/div/div/div[1]/input[2]').click()
     time.sleep(2)
-    driver.find_element_by_id('ctl00_ctl00_Content_ContentPlaceHolder1_btnExportCsv').click()
+    driver.find_element_by_xpath('/html/body/form/div[5]/div/div/div[5]/div/div/div/div/div/div[2]/button').click()
     time.sleep(2)
     return
 
@@ -736,7 +739,7 @@ def get_first_choice():
 
 
 # Code starts here
-version_no = "V1.1 PC 01/02/23"
+version_no = "V1.2 PC 27/02/23"
 wd = 'C:\\Billing\\Recall'
 downloadDirectory = wd
 config_file = 'recall.ini'
