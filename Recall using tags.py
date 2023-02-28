@@ -169,16 +169,26 @@ def download_activity():
     from_field.clear()
     from_field.send_keys(start_date)
     driver.find_element_by_xpath('/html/body/form/div[5]/div/div/div[1]/input[2]').click()
+    driver.find_element_by_xpath('/html/body/form/div[5]/div/div/div[3]/div/button').click() #update button
     time.sleep(2)
-    driver.find_element_by_xpath('/html/body/form/div[5]/div/div/div[5]/div/div/div/div/div/div[2]/button').click()
-    time.sleep(2)
+    download_csv_btn = driver.find_element_by_xpath('/html/body/form/div[5]/div/div/div[5]/div/div/div/div/div/div[2]/button')
+    download_csv_btn.click()
+    # time.sleep(2)
     return
 
 def find_patients_to_recall():
     # pymsgbox.alert('Finding Patients - this takes a few seconds', timeout=200)
     os.chdir(wd)
+    timeout_chk = 0
     d = {}
     download_activity()
+    while not os.path.exists('Activity by date.csv'):
+        time.sleep(1)
+        timeout_chk += 1
+        print('this is slow ' + str(timeout_chk))
+        if timeout_chk > 15:
+            pymsgbox.alert('Too long - contact Justin Baron')
+            quit()
     with open('Activity by date.csv', mode='r') as f:
         appointments = csv.reader(f)
         for appointment in appointments:
